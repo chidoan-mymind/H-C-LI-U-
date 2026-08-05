@@ -1,0 +1,483 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Trò Chơi Nối Hình Học & Hình Khối - Toán 3</title>
+  <style>
+    :root {
+      --bg-color: #f0f9ff;
+      --primary-color: #0284c7;
+      --accent-color: #f59e0b;
+      --success-color: #22c55e;
+      --card-bg: #ffffff;
+      --shadow: 0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -4px rgba(0,0,0,0.1);
+    }
+
+    * {
+      box-sizing: border-box;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background-color: var(--bg-color);
+      margin: 0;
+      padding: 20px;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      overflow-x: hidden;
+    }
+
+    header {
+      width: 100%;
+      max-width: 1000px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+      gap: 15px;
+    }
+
+    h1 {
+      color: var(--primary-color);
+      margin: 0;
+      font-size: 1.8rem;
+      text-shadow: 1px 1px 2px rgba(0,0,0,0.05);
+    }
+
+    .controls {
+      display: flex;
+      gap: 15px;
+      align-items: center;
+    }
+
+    .btn-download {
+      background: linear-gradient(135deg, #10b981, #059669);
+      color: white;
+      border: none;
+      padding: 10px 18px;
+      border-radius: 20px;
+      font-weight: bold;
+      font-size: 0.95rem;
+      cursor: pointer;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .btn-download:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 12px rgba(0,0,0,0.15);
+    }
+
+    .score-board {
+      background: #fef08a;
+      border: 3px solid #f59e0b;
+      padding: 8px 20px;
+      border-radius: 20px;
+      font-weight: bold;
+      font-size: 1.2rem;
+      color: #78350f;
+    }
+
+    /* Vùng chứa các Hộp Đích */
+    .target-container {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 20px;
+      width: 100%;
+      max-width: 1000px;
+      margin-bottom: 30px;
+    }
+
+    .target-box {
+      background: var(--card-bg);
+      border: 3px dashed #cbd5e1;
+      border-radius: 20px;
+      padding: 15px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-height: 220px;
+      transition: all 0.3s;
+      position: relative;
+    }
+
+    .target-box.drag-over {
+      border-color: var(--primary-color);
+      background-color: #e0f2fe;
+      transform: scale(1.02);
+    }
+
+    .target-box h2 {
+      margin: 10px 0 0 0;
+      color: #334155;
+      font-size: 1.3rem;
+    }
+
+    .target-svg {
+      width: 90px;
+      height: 90px;
+    }
+
+    /* Vùng chứa các Thẻ Vật Dụng */
+    .source-container {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 20px;
+      width: 100%;
+      max-width: 1000px;
+      min-height: 180px;
+      background: rgba(255,255,255,0.6);
+      padding: 20px;
+      border-radius: 20px;
+      border: 2px solid #e2e8f0;
+    }
+
+    .draggable-card {
+      width: 130px;
+      height: 150px;
+      background: var(--card-bg);
+      border-radius: 16px;
+      border: 2px solid #e2e8f0;
+      box-shadow: var(--shadow);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      cursor: grab;
+      transition: transform 0.2s, box-shadow 0.2s;
+      touch-action: none;
+    }
+
+    .draggable-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 12px 20px -5px rgba(0,0,0,0.15);
+    }
+
+    .draggable-card:active {
+      cursor: grabbing;
+    }
+
+    .draggable-card.dragging {
+      opacity: 0.5;
+    }
+
+    .draggable-card p {
+      margin: 10px 0 0 0;
+      font-size: 0.95rem;
+      font-weight: 600;
+      color: #475569;
+    }
+
+    .draggable-card svg {
+      width: 80px;
+      height: 80px;
+    }
+
+    /* Hiệu ứng Sai (Shake) */
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      20%, 60% { transform: translateX(-10px); }
+      40%, 80% { transform: translateX(10px); }
+    }
+
+    .shake {
+      animation: shake 0.4s ease-in-out;
+    }
+
+    /* Hiệu ứng Pháo hoa CSS */
+    .firework-particle {
+      position: absolute;
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      pointer-events: none;
+      animation: explode 0.8s ease-out forwards;
+      z-index: 100;
+    }
+
+    @keyframes explode {
+      0% {
+        transform: translate(0, 0) scale(1);
+        opacity: 1;
+      }
+      100% {
+        transform: translate(var(--dx), var(--dy)) scale(0);
+        opacity: 0;
+      }
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      .target-container {
+        grid-template-columns: 1fr;
+      }
+      header {
+        flex-direction: column;
+        text-align: center;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <h1>Trò Chơi Nối Hình Học & Hình Khối</h1>
+    <div class="controls">
+      <div class="score-board">Điểm: <span id="score">0</span>/6</div>
+      <button class="btn-download" onclick="downloadGame()">
+        💾 Tải Website Về Máy (Học Offline)
+      </button>
+    </div>
+  </header>
+
+  <!-- VÙNG HỘP ĐÍCH -->
+  <div class="target-container">
+    <!-- Hộp Hình Cầu -->
+    <div class="target-box" data-shape="sphere">
+      <svg class="target-svg" viewBox="0 0 100 100">
+        <circle cx="50" cy="50" r="40" fill="#38bdf8" />
+        <ellipse cx="50" cy="50" rx="40" ry="12" fill="none" stroke="#0284c7" stroke-width="2" stroke-dasharray="4 2" />
+        <circle cx="35" cy="35" r="8" fill="#ffffff" opacity="0.5" />
+      </svg>
+      <h2>Hình Cầu</h2>
+    </div>
+
+    <!-- Hộp Hình Lập Phương -->
+    <div class="target-box" data-shape="cube">
+      <svg class="target-svg" viewBox="0 0 100 100">
+        <path d="M50 15 L85 32 L50 50 L15 32 Z" fill="#fbbf24" />
+        <path d="M15 32 L50 50 L50 85 L15 67 Z" fill="#f59e0b" />
+        <path d="M50 50 L85 32 L85 67 L50 85 Z" fill="#d97706" />
+      </svg>
+      <h2>Hình Lập Phương</h2>
+    </div>
+
+    <!-- Hộp Hình Trụ -->
+    <div class="target-box" data-shape="cylinder">
+      <svg class="target-svg" viewBox="0 0 100 100">
+        <path d="M20 30 L20 70 A30 12 0 0 0 80 70 L80 30 Z" fill="#a855f7" />
+        <ellipse cx="50" cy="30" rx="30" ry="12" fill="#c084fc" />
+        <ellipse cx="50" cy="70" rx="30" ry="12" fill="none" stroke="#7e22ce" stroke-width="2" stroke-dasharray="4 2" />
+      </svg>
+      <h2>Hình Trụ</h2>
+    </div>
+  </div>
+
+  <!-- VÙNG CHỨA VẬT DỤNG KÉO THẢ -->
+  <div class="source-container" id="sourceContainer">
+    <!-- Qua bóng (Hình cầu) -->
+    <div class="draggable-card" draggable="true" data-shape="sphere" id="item1">
+      <svg viewBox="0 0 100 100">
+        <circle cx="50" cy="50" r="40" fill="#ef4444" />
+        <path d="M 50 10 A 40 40 0 0 0 50 90 A 40 40 0 0 0 50 10" fill="#ffffff" opacity="0.3"/>
+        <path d="M 10 50 A 40 40 0 0 0 90 50 A 40 40 0 0 0 10 50" fill="#ffffff" opacity="0.3"/>
+      </svg>
+      <p>Quả Bóng</p>
+    </div>
+
+    <!-- Trái Đất (Hình cầu) -->
+    <div class="draggable-card" draggable="true" data-shape="sphere" id="item2">
+      <svg viewBox="0 0 100 100">
+        <circle cx="50" cy="50" r="40" fill="#60a5fa" />
+        <circle cx="40" cy="40" r="15" fill="#4ade80" />
+        <circle cx="65" cy="60" r="18" fill="#4ade80" />
+        <circle cx="35" cy="70" r="10" fill="#4ade80" />
+      </svg>
+      <p>Quả Địa Cầu</p>
+    </div>
+
+    <!-- Con Rúc Rắc (Hình lập phương) -->
+    <div class="draggable-card" draggable="true" data-shape="cube" id="item3">
+      <svg viewBox="0 0 100 100">
+        <!-- Cube Body -->
+        <path d="M50 15 L85 32 L50 50 L15 32 Z" fill="#ffffff" stroke="#cbd5e1" stroke-width="2"/>
+        <path d="M15 32 L50 50 L50 85 L15 67 Z" fill="#f1f5f9" stroke="#cbd5e1" stroke-width="2"/>
+        <path d="M50 50 L85 32 L85 67 L50 85 Z" fill="#e2e8f0" stroke="#cbd5e1" stroke-width="2"/>
+        <!-- Dots -->
+        <circle cx="50" cy="32" r="4" fill="#ef4444" />
+        <circle cx="30" cy="50" r="3" fill="#1e293b" />
+        <circle cx="35" cy="62" r="3" fill="#1e293b" />
+        <circle cx="65" cy="45" r="3" fill="#1e293b" />
+        <circle cx="70" cy="58" r="3" fill="#1e293b" />
+      </svg>
+      <p>Hạt Xúc Xắc</p>
+    </div>
+
+    <!-- Hộp Quà (Hình lập phương) -->
+    <div class="draggable-card" draggable="true" data-shape="cube" id="item4">
+      <svg viewBox="0 0 100 100">
+        <path d="M50 20 L85 35 L50 50 L15 35 Z" fill="#f43f5e" />
+        <path d="M15 35 L50 50 L50 85 L15 70 Z" fill="#e11d48" />
+        <path d="M50 50 L85 35 L85 70 L50 85 Z" fill="#be123c" />
+        <!-- Ribbon -->
+        <path d="M50 20 L50 85" stroke="#fbbf24" stroke-width="8" />
+        <path d="M15 35 L85 70" stroke="#fbbf24" stroke-width="8" />
+      </svg>
+      <p>Hộp Quà</p>
+    </div>
+
+    <!-- Lon Sữa (Hình trụ) -->
+    <div class="draggable-card" draggable="true" data-shape="cylinder" id="item5">
+      <svg viewBox="0 0 100 100">
+        <path d="M25 25 L25 75 A25 10 0 0 0 75 75 L75 25 Z" fill="#38bdf8" />
+        <ellipse cx="50" cy="25" rx="25" ry="10" fill="#7dd3fc" />
+        <rect x="25" y="40" width="50" height="20" fill="#fef08a" />
+      </svg>
+      <p>Lon Sữa</p>
+    </div>
+
+    <!-- Bánh Sinh Nhật (Hình trụ) -->
+    <div class="draggable-card" draggable="true" data-shape="cylinder" id="item6">
+      <svg viewBox="0 0 100 100">
+        <path d="M20 35 L20 75 A30 12 0 0 0 80 75 L80 35 Z" fill="#f472b6" />
+        <ellipse cx="50" cy="35" rx="30" ry="12" fill="#fbcfe8" />
+        <!-- Candle -->
+        <rect x="47" y="12" width="6" height="15" fill="#f59e0b" />
+        <circle cx="50" cy="8" r="4" fill="#ef4444" />
+      </svg>
+      <p>Bánh Sinh Nhật</p>
+    </div>
+  </div>
+
+  <script>
+    let score = 0;
+    const totalItems = 6;
+    const scoreElement = document.getElementById('score');
+
+    // Khởi tạo các sự kiện Drag & Drop
+    const cards = document.querySelectorAll('.draggable-card');
+    const targets = document.querySelectorAll('.target-box');
+
+    cards.forEach(card => {
+      card.addEventListener('dragstart', handleDragStart);
+      card.addEventListener('dragend', handleDragEnd);
+    });
+
+    targets.forEach(target => {
+      target.addEventListener('dragover', handleDragOver);
+      target.addEventListener('dragleave', handleDragLeave);
+      target.addEventListener('drop', handleDrop);
+    });
+
+    function handleDragStart(e) {
+      e.dataTransfer.setData('text/plain', e.target.id);
+      setTimeout(() => e.target.classList.add('dragging'), 0);
+    }
+
+    function handleDragEnd(e) {
+      e.target.classList.remove('dragging');
+    }
+
+    function handleDragOver(e) {
+      e.preventDefault();
+      e.currentTarget.classList.add('drag-over');
+    }
+
+    function handleDragLeave(e) {
+      e.currentTarget.classList.remove('drag-over');
+    }
+
+    function handleDrop(e) {
+      e.preventDefault();
+      const targetBox = e.currentTarget;
+      targetBox.classList.remove('drag-over');
+
+      const cardId = e.dataTransfer.getData('text/plain');
+      const card = document.getElementById(cardId);
+
+      if (!card) return;
+
+      const cardShape = card.getAttribute('data-shape');
+      const targetShape = targetBox.getAttribute('data-shape');
+
+      // Kiểm tra đúng / sai
+      if (cardShape === targetShape) {
+        // Đúng: Xử lý cộng điểm và biến mất thẻ
+        score++;
+        scoreElement.textContent = score;
+        
+        // Tạo hiệu ứng Pháo hoa tại vị trí Hộp Đích
+        createFireworks(targetBox);
+
+        // Animate ẩn thẻ
+        card.style.transform = 'scale(0)';
+        card.style.opacity = '0';
+        setTimeout(() => card.remove(), 200);
+
+        // Kiểm tra hoàn thành trò chơi
+        if (score === totalItems) {
+          setTimeout(() => {
+            alert('🎉 CHÚC MỪNG EM! Em đã hoàn thành xuất sắc trò chơi!');
+          }, 500);
+        }
+      } else {
+        // Sai: Rung lắc thẻ báo lỗi
+        card.classList.add('shake');
+        setTimeout(() => card.classList.remove('shake'), 400);
+      }
+    }
+
+    // Hàm tạo pháo hoa CSS
+    function createFireworks(element) {
+      const rect = element.getBoundingClientRect();
+      const centerX = rect.left + rect.width / 2;
+      const centerY = rect.top + rect.height / 2;
+      const colors = ['#ef4444', '#3b82f6', '#10b981', '#f59e0b', '#8b5cf6'];
+
+      for (let i = 0; i < 20; i++) {
+        const particle = document.createElement('div');
+        particle.className = 'firework-particle';
+        
+        const angle = Math.random() * Math.PI * 2;
+        const distance = 50 + Math.random() * 50;
+        const dx = Math.cos(angle) * distance + 'px';
+        const dy = Math.sin(angle) * distance + 'px';
+        
+        particle.style.setProperty('--dx', dx);
+        particle.style.setProperty('--dy', dy);
+        particle.style.left = centerX + 'px';
+        particle.style.top = centerY + 'px';
+        particle.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+
+        document.body.appendChild(particle);
+
+        setTimeout(() => particle.remove(), 800);
+      }
+    }
+
+    // TÍNH NĂNG TẢI FILE TỰ ĐỘNG (BLOB)
+    function downloadGame() {
+      // Lấy toàn bộ mã nguồn HTML hiện tại
+      const htmlContent = "<!DOCTYPE html>\n" + document.documentElement.outerHTML;
+      
+      // Tạo một đối tượng Blob với MIME type là text/html
+      const blob = new Blob([htmlContent], { type: 'text/html;charset=utf-8' });
+      
+      // Tạo đường dẫn URL tạm thời cho Blob
+      const url = URL.createObjectURL(blob);
+      
+      // Tạo thẻ <a> ẩn để kích hoạt tải về
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'Game_NoiHinhHoc_TieuHoc.html';
+      
+      document.body.appendChild(a);
+      a.click();
+      
+      // Dọn dẹp thẻ a và URL
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }
+  </script>
+</body>
+</html>

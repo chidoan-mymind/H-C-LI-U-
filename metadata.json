@@ -1,6 +1,0 @@
-{
-  "name": "Hành Trình Khám Phá Thung Lũng Sức Khỏe",
-  "description": "Trò chơi giáo dục dinh dưỡng tương tác dành cho học sinh lớp 4 cùng Thần Dinh Dưỡng",
-  "requestFramePermissions": [],
-  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
-}

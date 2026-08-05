@@ -1,0 +1,618 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Game Giáo Dục: Lựa Chọn Thực Phẩm Lành Mạnh - Lớp 4</title>
+    <style>
+        :root {
+            --primary: #4CAF50;
+            --primary-dark: #388E3C;
+            --secondary: #FF9800;
+            --accent: #2196F3;
+            --bg-color: #E8F5E9;
+            --card-bg: #FFFFFF;
+            --text-color: #2E7D32;
+            --correct: #8BC34A;
+            --wrong: #FF5252;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Nunito', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: #333;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        /* Top Action Bar */
+        .top-bar {
+            width: 100%;
+            max-width: 900px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            background: white;
+            padding: 15px 20px;
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+        }
+
+        .download-btn {
+            background-color: #FF5722;
+            color: white;
+            border: none;
+            padding: 10px 18px;
+            font-size: 15px;
+            font-weight: bold;
+            border-radius: 25px;
+            cursor: pointer;
+            box-shadow: 0 4px 0 #E64A19;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .download-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 0 #E64A19;
+        }
+
+        .download-btn:active {
+            transform: translateY(2px);
+            box-shadow: 0 0 0 #E64A19;
+        }
+
+        /* Container */
+        .game-container {
+            width: 100%;
+            max-width: 900px;
+            background: var(--card-bg);
+            border-radius: 20px;
+            padding: 25px;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+            border: 4px solid var(--primary);
+        }
+
+        /* Header & Info */
+        header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        h1 {
+            color: var(--text-color);
+            font-size: 24px;
+            margin-bottom: 15px;
+            text-transform: uppercase;
+        }
+
+        .student-info {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            flex-wrap: wrap;
+            background: #F1F8E9;
+            padding: 12px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+        }
+
+        .student-info input {
+            padding: 8px 12px;
+            border: 2px solid #A5D6A7;
+            border-radius: 8px;
+            outline: none;
+            font-size: 15px;
+        }
+
+        /* Section Styling */
+        .section-title {
+            background: var(--primary);
+            color: white;
+            padding: 10px 15px;
+            border-radius: 10px;
+            font-size: 18px;
+            margin: 25px 0 15px 0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        /* Question Box (Bài 1) */
+        .question-card {
+            background: #FAFAFA;
+            border: 2px solid #E0E0E0;
+            border-radius: 12px;
+            padding: 15px;
+            margin-bottom: 15px;
+            position: relative;
+        }
+
+        .question-text {
+            font-weight: bold;
+            font-size: 16px;
+            margin-bottom: 10px;
+            color: #1B5E20;
+        }
+
+        .options-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .option-btn {
+            background: white;
+            border: 2px solid #C8E6C9;
+            padding: 10px 15px;
+            border-radius: 8px;
+            text-align: left;
+            cursor: pointer;
+            font-size: 15px;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+        }
+
+        .option-btn:hover {
+            background: #E8F5E9;
+            border-color: var(--primary);
+        }
+
+        .option-btn.correct {
+            background: #C8E6C9 !important;
+            border-color: var(--correct) !important;
+            color: #2E7D32;
+            font-weight: bold;
+        }
+
+        .option-btn.wrong {
+            background: #FFCDD2 !important;
+            border-color: var(--wrong) !important;
+            color: #C62828;
+        }
+
+        /* Drag and Drop (Bài 2) */
+        .food-pool {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            padding: 15px;
+            background: #FFF3E0;
+            border-radius: 12px;
+            min-height: 80px;
+            margin-bottom: 20px;
+            border: 2px dashed var(--secondary);
+        }
+
+        .food-item {
+            background: white;
+            border: 2px solid var(--secondary);
+            padding: 8px 12px;
+            border-radius: 20px;
+            cursor: grab;
+            font-weight: bold;
+            color: #E65100;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            user-select: none;
+        }
+
+        .food-item:active {
+            cursor: grabbing;
+        }
+
+        .categories-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+        }
+
+        .category-box {
+            background: #F5F5F5;
+            border: 2px solid #BDBDBD;
+            border-radius: 12px;
+            padding: 12px;
+            min-height: 140px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .category-box h4 {
+            font-size: 14px;
+            text-align: center;
+            margin-bottom: 10px;
+            color: #424242;
+            padding-bottom: 5px;
+            border-bottom: 2px solid #E0E0E0;
+        }
+
+        .drop-zone {
+            flex-grow: 1;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            align-content: flex-start;
+            min-height: 80px;
+        }
+
+        /* Open Question (Bài 3) */
+        .open-question {
+            background: #E3F2FD;
+            border: 2px solid #90CAF9;
+            border-radius: 12px;
+            padding: 15px;
+        }
+
+        .bi-avatar {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+
+        textarea {
+            width: 100%;
+            height: 100px;
+            padding: 10px;
+            border: 2px solid #90CAF9;
+            border-radius: 8px;
+            resize: vertical;
+            font-size: 14px;
+            outline: none;
+        }
+
+        /* Action Footer */
+        .footer-actions {
+            margin-top: 25px;
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+        }
+
+        .submit-btn {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            font-size: 18px;
+            font-weight: bold;
+            border-radius: 30px;
+            cursor: pointer;
+            box-shadow: 0 4px 0 var(--primary-dark);
+        }
+
+        .submit-btn:hover {
+            background: var(--primary-dark);
+        }
+
+        .feedback-toast {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            padding: 15px 25px;
+            border-radius: 10px;
+            color: white;
+            font-weight: bold;
+            display: none;
+            animation: fadeIn 0.3s;
+            z-index: 1000;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* SVG Icons Inline Styling */
+        .icon {
+            width: 24px;
+            height: 24px;
+            vertical-align: middle;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="top-bar">
+        <div style="display: flex; align-items: center; gap: 10px;">
+            <svg class="icon" viewBox="0 0 24 24" fill="#4CAF50"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
+            <span style="font-weight: bold; color: #2E7D32;">Trò Chơi Dinh Dưỡng Lớp 4</span>
+        </div>
+        <button class="download-btn" onclick="downloadSelf()">
+            💾 Tải Website Về Máy (Học Offline)
+        </button>
+    </div>
+
+    <div class="game-container">
+        <header>
+            <h1>🥦 LỰA CHỌN THỰC PHẨM LÀNH MẠNH 🍎</h1>
+            <div class="student-info">
+                <div>
+                    <label><b>Họ và tên:</b></label>
+                    <input type="text" id="studentName" placeholder="Nhập tên của em...">
+                </div>
+                <div>
+                    <label><b>Lớp:</b></label>
+                    <input type="text" id="studentClass" placeholder="4A...">
+                </div>
+            </div>
+        </header>
+
+        <!-- BÀI 1 -->
+        <div class="section-title">
+            <span>BÀI 1: TRẮC NGHIỆM VỀ CÁC NHÓM CHẤT</span>
+        </div>
+        <div id="quiz-container"></div>
+
+        <!-- BÀI 2 -->
+        <div class="section-title">
+            <span>BÀI 2: PHÂN LOẠI THỰC PHẨM (Kéo thả thực phẩm)</span>
+        </div>
+        <p style="margin-bottom: 10px; font-style: italic; color: #555;">Kéo các món ăn bên dưới vào đúng hộp nhóm chất tương ứng:</p>
+        
+        <div class="food-pool" id="foodPool" ondrop="drop(event)" ondragover="allowDrop(event)">
+            <!-- Food items generated by JS -->
+        </div>
+
+        <div class="categories-grid">
+            <div class="category-box">
+                <h4>1. Nhóm Bột Đường</h4>
+                <div class="drop-zone" id="cat-bot-duong" ondrop="drop(event)" ondragover="allowDrop(event)"></div>
+            </div>
+            <div class="category-box">
+                <h4>2. Nhóm Chất Đạm</h4>
+                <div class="drop-zone" id="cat-dam" ondrop="drop(event)" ondragover="allowDrop(event)"></div>
+            </div>
+            <div class="category-box">
+                <h4>3. Nhóm Chất Béo</h4>
+                <div class="drop-zone" id="cat-beo" ondrop="drop(event)" ondragover="allowDrop(event)"></div>
+            </div>
+            <div class="category-box">
+                <h4>4. Vitamin & Khoáng Chất</h4>
+                <div class="drop-zone" id="cat-vitamin" ondrop="drop(event)" ondragover="allowDrop(event)"></div>
+            </div>
+        </div>
+
+        <!-- BÀI 3 -->
+        <div class="section-title">
+            <span>BÀI 3: VẬN DỤNG NHANH</span>
+        </div>
+        <div class="open-question">
+            <div class="bi-avatar">
+                <!-- SVG Avatar Bạn Bi -->
+                <svg width="60" height="60" viewBox="0 0 100 100">
+                    <circle cx="50" cy="50" r="45" fill="#FFCC80"/>
+                    <circle cx="35" cy="40" r="5" fill="#333"/>
+                    <circle cx="65" cy="40" r="5" fill="#333"/>
+                    <path d="M 35 65 Q 50 80 65 65" stroke="#333" stroke-width="4" fill="none"/>
+                    <path d="M 20 30 Q 50 10 80 30" stroke="#5D4037" stroke-width="12" stroke-linecap="round" fill="none"/>
+                </svg>
+                <div>
+                    <b>Tình huống của bạn Bi:</b>
+                    <p style="font-size: 14px; color: #333;">Bi chỉ thích ăn thịt heo và cơm, không bao giờ ăn rau hay trái cây (xoài, măng cụt, rau xà lách).</p>
+                </div>
+            </div>
+            <p style="margin-bottom: 8px; font-weight: bold;">Theo em, bữa ăn của bạn Bi đã đảm bảo "cân bằng dinh dưỡng" chưa? Việc này ảnh hưởng thế nào đến cơ thể bạn Bi?</p>
+            <textarea id="openAnswer" placeholder="Em hãy nhập câu trả lời của mình vào đây... (Gợi ý: Cơ thể có đủ chất không? Có thể bị táo bón hay thiếu vitamin gì không?)"></textarea>
+        </div>
+
+        <div class="footer-actions">
+            <button class="submit-btn" onclick="checkAllAnswers()">NỘP BÀI KIỂM TRA</button>
+        </div>
+    </div>
+
+    <div class="feedback-toast" id="toast"></div>
+
+    <script>
+        // Dữ liệu bài 1
+        const quizData = [
+            {
+                id: 1,
+                question: "Câu 1: Thực phẩm được chia thành mấy nhóm chất dinh dưỡng chính?",
+                options: [
+                    "A. 2 nhóm (nhóm động vật và nhóm thực vật).",
+                    "B. 3 nhóm (nhóm đạm, nhóm béo, nhóm vitamin).",
+                    "C. 4 nhóm (nhóm bột đường, nhóm chất đạm, nhóm chất béo, nhóm vitamin và khoáng chất)."
+                ],
+                correct: 2
+            },
+            {
+                id: 2,
+                question: "Câu 2: Nhóm thức ăn nào dưới đây có vai trò chính là xây dựng và phát triển cơ thể giúp em cao lớn hơn?",
+                options: [
+                    "A. Nhóm chứa nhiều chất đạm.",
+                    "B. Nhóm chứa nhiều chất bột đường.",
+                    "C. Nhóm chứa nhiều vitamin và khoáng chất."
+                ],
+                correct: 0
+            },
+            {
+                id: 3,
+                question: "Câu 3: Tại sao chúng ta cần phải ăn phối hợp nhiều loại thức ăn và thường xuyên thay đổi món?",
+                options: [
+                    "A. Để thức ăn có màu sắc đẹp mắt hơn.",
+                    "B. Vì không có một loại thức ăn nào cung cấp đủ các chất dinh dưỡng cho nhu cầu của cơ thể.",
+                    "C. Để giúp chúng ta không bị khát nước."
+                ],
+                correct: 1
+            },
+            {
+                id: 4,
+                question: "Câu 4: Trong các loại thực phẩm dưới đây, nhóm thực phẩm nào cung cấp nhiều vitamin và chất xơ nhất, giúp hệ tiêu hóa của em luôn khỏe mạnh?",
+                options: [
+                    "A. Thịt heo, cá.",
+                    "B. Rau xà lách, xoài, măng cụt.",
+                    "C. Bánh mì, phô mai."
+                ],
+                correct: 1
+            }
+        ];
+
+        // Dữ liệu bài 2 (Phân loại)
+        const foodsData = [
+            { id: "f1", name: "Thịt heo", cat: "cat-dam", icon: "🥩" },
+            { id: "f2", name: "Măng cụt", cat: "cat-vitamin", icon: "🍇" },
+            { id: "f3", name: "Sữa", cat: "cat-dam", icon: "🥛" },
+            { id: "f4", name: "Bánh mì", cat: "cat-bot-duong", icon: "🍞" },
+            { id: "f5", name: "Cá", cat: "cat-dam", icon: "🐟" },
+            { id: "f6", name: "Xoài", cat: "cat-vitamin", icon: "🥭" },
+            { id: "f7", name: "Phô mai", cat: "cat-beo", icon: "🧀" },
+            { id: "f8", name: "Rau xà lách", cat: "cat-vitamin", icon: "🥬" },
+            { id: "f9", name: "Đậu", cat: "cat-dam", icon: "🫘" },
+            { id: "f10", name: "Trứng", cat: "cat-dam", icon: "🥚" },
+            { id: "f11", name: "Tôm", cat: "cat-dam", icon: "🦐" },
+            { id: "f12", name: "Thịt bò", cat: "cat-dam", icon: "🥩" },
+            { id: "f13", name: "Quả bơ", cat: "cat-beo", icon: "🥑" }
+        ];
+
+        let userAnswersQuiz = {};
+
+        // Hiển thị Bài 1
+        function renderQuiz() {
+            const container = document.getElementById('quiz-container');
+            container.innerHTML = quizData.map((q, qIndex) => `
+                <div class="question-card" id="q-card-${qIndex}">
+                    <div class="question-text">${q.question}</div>
+                    <div class="options-grid">
+                        ${q.options.map((opt, oIndex) => `
+                            <button class="option-btn" onclick="selectOption(${qIndex}, ${oIndex}, this)">
+                                ${opt}
+                            </button>
+                        `).join('')}
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function selectOption(qIndex, oIndex, btn) {
+            userAnswersQuiz[qIndex] = oIndex;
+            const parent = btn.parentElement;
+            const buttons = parent.querySelectorAll('.option-btn');
+            buttons.forEach(b => b.style.borderColor = '#C8E6C9');
+            btn.style.borderColor = '#2196F3';
+            btn.style.backgroundColor = '#E3F2FD';
+        }
+
+        // Hiển thị Bài 2 Drag Drop
+        function renderFoods() {
+            const pool = document.getElementById('foodPool');
+            pool.innerHTML = '';
+            foodsData.forEach(food => {
+                const el = document.createElement('div');
+                el.className = 'food-item';
+                el.draggable = true;
+                el.id = food.id;
+                el.innerText = `${food.icon} ${food.name}`;
+                el.ondragstart = drag;
+                pool.appendChild(el);
+            });
+        }
+
+        function allowDrop(ev) {
+            ev.preventDefault();
+        }
+
+        function drag(ev) {
+            ev.dataTransfer.setData("text", ev.target.id);
+        }
+
+        function drop(ev) {
+            ev.preventDefault();
+            const data = ev.dataTransfer.getData("text");
+            const draggedElement = document.getElementById(data);
+            let target = ev.target;
+            
+            if (!target.classList.contains('drop-zone') && !target.classList.contains('food-pool')) {
+                target = target.closest('.drop-zone') || target.closest('.food-pool');
+            }
+            if (target) {
+                target.appendChild(draggedElement);
+            }
+        }
+
+        // Kiểm tra toàn bộ bài làm
+        function checkAllAnswers() {
+            let score = 0;
+            
+            // Chấm bài 1
+            quizData.forEach((q, idx) => {
+                const card = document.getElementById(`q-card-${idx}`);
+                const buttons = card.querySelectorAll('.option-btn');
+                const selected = userAnswersQuiz[idx];
+
+                buttons.forEach((btn, bIdx) => {
+                    btn.classList.remove('correct', 'wrong');
+                    if (bIdx === q.correct) {
+                        btn.classList.add('correct');
+                    }
+                    if (selected === bIdx && selected !== q.correct) {
+                        btn.classList.add('wrong');
+                    }
+                });
+
+                if (selected === q.correct) score++;
+            });
+
+            // Chấm bài 2
+            let correctDrag = 0;
+            foodsData.forEach(food => {
+                const el = document.getElementById(food.id);
+                const parentBox = el.parentElement;
+                if (parentBox && parentBox.id === food.cat) {
+                    correctDrag++;
+                    el.style.border = "2px solid #4CAF50";
+                    el.style.background = "#E8F5E9";
+                } else if (parentBox && parentBox.classList.contains('drop-zone')) {
+                    el.style.border = "2px solid #FF5252";
+                    el.style.background = "#FFEBEE";
+                }
+            });
+
+            // Âm thanh giả lập & Phản hồi
+            showToast(`Hoàn thành! Đúng ${score}/4 câu trắc nghiệm. Phân loại đúng ${correctDrag}/${foodsData.length} thực phẩm!`, '#4CAF50');
+        }
+
+        function showToast(msg, bgColor) {
+            const toast = document.getElementById('toast');
+            toast.innerText = msg;
+            toast.style.backgroundColor = bgColor;
+            toast.style.display = 'block';
+            setTimeout(() => { toast.style.display = 'none'; }, 4000);
+        }
+
+        // TÍNH NĂNG TẢI FILE TỰ ĐỘNG BẰNG BLOB (BẮT BUỘC)
+        function downloadSelf() {
+            const htmlContent = "<!DOCTYPE html>\n" + document.documentElement.outerHTML;
+            const blob = new Blob([htmlContent], { type: 'text/html;charset=utf-8' });
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = 'Game H4.html';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(a.href);
+        }
+
+        // Khởi tạo
+        window.onload = () => {
+            renderQuiz();
+            renderFoods();
+        };
+    </script>
+</body>
+</html>

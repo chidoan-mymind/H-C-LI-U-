@@ -1,330 +1,396 @@
-<!DOCTYPE html>
-<html lang="vi">
-<head>
-    <meta charset="UTF-8">
-    <title>Phiếu Ôn Tập Health 5 - Unit 3</title>
-    <style>
-        @page {
-            size: A4;
-            margin: 15mm 15mm 15mm 15mm;
-        }
-        body {
-            font-family: "Times New Roman", Times, serif;
-            font-size: 12.5pt;
-            line-height: 1.25;
-            color: #000;
-            margin: 0;
-            padding: 0;
-        }
-        .page {
-            width: 100%;
-            height: 100%;
-            box-sizing: border-box;
-        }
-        .page-break {
-            page-break-after: always;
-            break-after: page;
-        }
-        h1 {
-            text-align: center;
-            font-size: 15pt;
-            margin: 0 0 4px 0;
-            text-transform: uppercase;
-        }
-        .subtitle {
-            text-align: center;
-            font-size: 13pt;
-            font-weight: bold;
-            margin-bottom: 12px;
-            text-transform: uppercase;
-        }
-        .info-header {
-            width: 100%;
-            margin-bottom: 12px;
-            font-style: italic;
-        }
-        .info-header td {
-            padding: 2px 0;
-        }
-        .section-title {
-            font-weight: bold;
-            font-size: 13pt;
-            margin-top: 8px;
-            margin-bottom: 4px;
-            text-transform: uppercase;
-            border-bottom: 1px solid #000;
-            padding-bottom: 2px;
-        }
-        .instruction {
-            font-style: italic;
-            margin-bottom: 8px;
-            font-size: 11.5pt;
-        }
-        .question {
-            margin-bottom: 7px;
-            page-break-inside: avoid;
-        }
-        .q-title {
-            font-weight: bold;
-            margin-bottom: 2px;
-        }
-        .options {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 2px 10px;
-            padding-left: 15px;
-        }
-        .options-full {
-            display: block;
-            padding-left: 15px;
-        }
-        .options-full div, .options div {
-            margin-bottom: 1px;
-        }
-        .chain-box {
-            border: 1px dashed #000;
-            padding: 12px;
-            margin-top: 8px;
-            font-size: 12pt;
-            line-height: 1.6;
-        }
-        .footer-note {
-            text-align: right;
-            font-weight: bold;
-            font-style: italic;
-            margin-top: 15px;
-        }
-    </style>
-</head>
-<body>
+import React, { useState } from 'react';
+import { Question } from '../types';
+import { QUESTIONS_DATA } from '../data/questions';
+import { CheckCircle2, XCircle, Bookmark, BookmarkCheck, Volume2, Bot, Filter, RefreshCw, Sparkles, ChevronRight, ChevronLeft, Lightbulb } from 'lucide-react';
 
-    <!-- TRANG 1 -->
-    <div class="page page-break">
-        <h1>PHIẾU ÔN TẬP MÔN HEALTH - LỚP 5</h1>
-        <div class="subtitle">CHỦ ĐỀ: UNIT 3 - LỐI SỐNG AN TOÀN VÀ LÀNH MẠNH</div>
+interface PracticeModeProps {
+  onAskAi: (questionContext: string) => void;
+}
 
-        <table class="info-header">
-            <tr>
-                <td style="width: 70%;"><strong>Họ và tên:</strong> ..........................................................................................</td>
-                <td style="width: 30%;"><strong>Lớp:</strong> .............................</td>
-            </tr>
-        </table>
+export const PracticeMode: React.FC<PracticeModeProps> = ({ onAskAi }) => {
+  const [userAnswers, setUserAnswers] = useState<Record<number, 'A' | 'B' | 'C' | 'D'>>({});
+  const [bookmarkedIds, setBookmarkedIds] = useState<number[]>([]);
+  const [selectedCategory, setSelectedCategory] = useState<string>('Tất cả');
+  const [viewMode, setViewMode] = useState<'single' | 'all'>('all');
+  const [currentSingleIndex, setCurrentSingleIndex] = useState<number>(0);
+  const [speakingId, setSpeakingId] = useState<number | null>(null);
 
-        <div class="section-title">PHẦN 1: PHIẾU TRẮC NGHIỆM (20 CÂU)</div>
-        <div class="instruction">Hướng dẫn: Khoanh tròn vào chữ cái (A, B, C hoặc D) trước câu trả lời đúng nhất.</div>
+  const categories = ['Tất cả', 'Dinh dưỡng', 'An toàn mạng', 'An toàn dưới nước', 'An toàn giao thông', 'Khẩn cấp & Khác'];
 
-        <div class="question">
-            <div class="q-title">Câu 1. Thành phần nào trên nhãn thực phẩm cung cấp thông tin về năng lượng?</div>
-            <div class="options">
-                <div>A. Protein</div>
-                <div>B. Calorie/Kilojoule</div>
-                <div>C. Vitamin</div>
-                <div>D. Chất xơ</div>
-            </div>
+  const filteredQuestions = QUESTIONS_DATA.filter((q) => {
+    if (selectedCategory === 'Tất cả') return true;
+    return q.category === selectedCategory;
+  });
+
+  const handleSelectAnswer = (qId: number, answerKey: 'A' | 'B' | 'C' | 'D') => {
+    setUserAnswers((prev) => ({
+      ...prev,
+      [qId]: answerKey,
+    }));
+  };
+
+  const toggleBookmark = (qId: number) => {
+    setBookmarkedIds((prev) =>
+      prev.includes(qId) ? prev.filter((id) => id !== qId) : [...prev, qId]
+    );
+  };
+
+  const resetPractice = () => {
+    if (window.confirm('Bạn có muốn làm lại tất cả các câu hỏi ôn tập không?')) {
+      setUserAnswers({});
+    }
+  };
+
+  const speakQuestion = (q: Question) => {
+    if ('speechSynthesis' in window) {
+      window.speechSynthesis.cancel();
+      if (speakingId === q.id) {
+        setSpeakingId(null);
+        return;
+      }
+      const text = `Câu ${q.id}: ${q.question}. Đáp án đúng là ${q.correctAnswer}. ${q.explanation}`;
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.lang = 'vi-VN';
+      utterance.onend = () => setSpeakingId(null);
+      setSpeakingId(q.id);
+      window.speechSynthesis.speak(utterance);
+    }
+  };
+
+  // Metrics
+  const answeredCount = Object.keys(userAnswers).length;
+  const correctCount = Object.entries(userAnswers).filter(
+    ([id, ans]) => QUESTIONS_DATA.find((q) => q.id === Number(id))?.correctAnswer === ans
+  ).length;
+
+  return (
+    <div className="max-w-5xl mx-auto px-4 py-6 space-y-6">
+      {/* Category Filter & Quick Stats Header */}
+      <div className="bg-white border-2 border-[#FFD93D] rounded-[28px] p-5 sm:p-6 shadow-sm space-y-4">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+          <div>
+            <h2 className="text-xl font-black text-[#2D2D2D] flex items-center gap-2">
+              <span>Ôn Tập Tương Tác 20 Câu Trắc Nghiệm</span>
+              <span className="text-xs bg-[#FFD93D] text-[#2D2D2D] px-3 py-1 rounded-full font-extrabold uppercase tracking-wide">
+                Unit 3
+              </span>
+            </h2>
+            <p className="text-sm text-gray-600 mt-1 font-medium">
+              Chọn đáp án để xem ngay phản hồi chi tiết và giải thích đáp án bài học.
+            </p>
+          </div>
+
+          <div className="flex items-center gap-2 self-end sm:self-auto">
+            <button
+              onClick={() => setViewMode(viewMode === 'all' ? 'single' : 'all')}
+              className="text-xs font-bold px-3.5 py-2 rounded-xl border-2 border-gray-200 hover:border-[#4ECDC4] hover:bg-[#F0FFFE] text-[#2D2D2D] transition-colors"
+            >
+              Chế độ: {viewMode === 'all' ? 'Danh sách' : 'Từng câu'}
+            </button>
+            <button
+              onClick={resetPractice}
+              className="flex items-center gap-1.5 text-xs font-bold px-3.5 py-2 rounded-xl bg-gray-100 hover:bg-gray-200 text-[#2D2D2D] transition-colors"
+            >
+              <RefreshCw className="w-3.5 h-3.5" />
+              Làm lại
+            </button>
+          </div>
         </div>
 
-        <div class="question">
-            <div class="q-title">Câu 2. Điều gì thường xảy ra nếu cơ thể nạp quá nhiều năng lượng so với mức cần thiết?</div>
-            <div class="options-full">
-                <div>A. Cơ thể sẽ cảm thấy đói hơn.</div>
-                <div>B. Năng lượng dư thừa được tích trữ dưới dạng mỡ.</div>
-                <div>C. Cơ thể sẽ cao thêm rất nhanh.</div>
-                <div>D. Cơ thể sẽ ngừng hấp thụ dinh dưỡng.</div>
+        {/* Progress bar */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2 border-t border-gray-100">
+          <div className="bg-[#FFF9E6] p-3.5 rounded-2xl border border-[#FFD93D]/60">
+            <div className="text-xs text-gray-600 font-bold uppercase tracking-wider">Tiến độ hoàn thành</div>
+            <div className="text-xl font-black text-[#2D2D2D] mt-0.5">
+              {answeredCount} / 20 <span className="text-xs font-semibold text-gray-500">câu</span>
             </div>
+            <div className="w-full bg-gray-200 h-2.5 rounded-full overflow-hidden mt-1.5">
+              <div
+                className="bg-[#4ECDC4] h-full transition-all duration-300"
+                style={{ width: `${(answeredCount / 20) * 100}%` }}
+              />
+            </div>
+          </div>
+
+          <div className="bg-[#F0FFFE] p-3.5 rounded-2xl border border-[#4ECDC4]/50">
+            <div className="text-xs text-[#1A7B74] font-bold uppercase tracking-wider">Trả lời đúng</div>
+            <div className="text-xl font-black text-[#1A7B74] mt-0.5">
+              {correctCount} / {answeredCount}{' '}
+              <span className="text-xs font-semibold text-[#1A7B74]/80">
+                ({answeredCount > 0 ? Math.round((correctCount / answeredCount) * 100) : 0}%)
+              </span>
+            </div>
+          </div>
+
+          <div className="bg-[#FFF5F5] p-3.5 rounded-2xl border border-[#FF6B6B]/30">
+            <div className="text-xs text-[#FF6B6B] font-bold uppercase tracking-wider">Đánh dấu xem lại</div>
+            <div className="text-xl font-black text-[#FF6B6B] mt-0.5">
+              {bookmarkedIds.length} <span className="text-xs font-semibold text-gray-500">câu</span>
+            </div>
+          </div>
         </div>
 
-        <div class="question">
-            <div class="q-title">Câu 3. Để đưa ra lựa chọn thực phẩm lành mạnh, chúng ta nên đọc thông tin nào trên bao bì sản phẩm?</div>
-            <div class="options-full">
-                <div>A. Hình ảnh minh họa bắt mắt trên mặt trước của bao bì.</div>
-                <div>B. Các thông báo quảng cáo như "Sản phẩm số 1" hoặc "Cực ngon".</div>
-                <div>C. Nhãn thông tin dinh dưỡng để so sánh lượng năng lượng và đường.</div>
-                <div>D. Tên của công ty sản xuất in ở góc hộp.</div>
-            </div>
+        {/* Category Filter Pills */}
+        <div className="flex items-center gap-2 overflow-x-auto pb-1 text-xs pt-1 scrollbar-none">
+          <span className="text-gray-500 font-bold flex items-center gap-1 shrink-0 mr-1">
+            <Filter className="w-3.5 h-3.5" /> Lọc:
+          </span>
+          {categories.map((cat) => (
+            <button
+              key={cat}
+              onClick={() => setSelectedCategory(cat)}
+              className={`px-3.5 py-1.5 rounded-xl font-bold shrink-0 transition-all ${
+                selectedCategory === cat
+                  ? 'bg-[#FF6B6B] text-white shadow-md'
+                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+              }`}
+            >
+              {cat}
+            </button>
+          ))}
         </div>
+      </div>
 
-        <div class="question">
-            <div class="q-title">Câu 4. Trong các thuật ngữ về an toàn trực tuyến, "Trolling" được định nghĩa là hành vi nào?</div>
-            <div class="options-full">
-                <div>A. Gửi các thư quảng cáo rác hàng loạt (Spam).</div>
-                <div>B. Cố ý đăng tải các nội dung gây hấn để kích động phản ứng tiêu cực.</div>
-                <div>C. Xâm nhập trái phép vào tài khoản của người khác (Hacking).</div>
-                <div>D. Công khai thông tin cá nhân của người khác khi chưa được phép (Doxing).</div>
-            </div>
-        </div>
+      {/* Questions Render Section */}
+      {viewMode === 'all' ? (
+        <div className="space-y-5">
+          {filteredQuestions.map((q) => {
+            const selected = userAnswers[q.id];
+            const isAnswered = selected !== undefined;
+            const isCorrect = selected === q.correctAnswer;
+            const isBookmarked = bookmarkedIds.includes(q.id);
 
-        <div class="question">
-            <div class="q-title">Câu 5. Tiêu chí quan trọng nhất để đánh giá độ tin cậy của một nguồn thông tin sức khỏe là gì?</div>
-            <div class="options-full">
-                <div>A. Thông tin đó có hình ảnh đẹp hay không.</div>
-                <div>B. Thông tin đó đến từ các tổ chức y tế uy tín hoặc nguồn chính thống.</div>
-                <div>C. Thông tin đó có nhiều lượt "thích" trên mạng xã hội.</div>
-                <div>D. Thông tin đó có quảng cáo các sản phẩm giảm giá.</div>
-            </div>
-        </div>
+            return (
+              <div
+                key={q.id}
+                className={`bg-white border-2 rounded-[28px] p-6 sm:p-7 transition-all duration-200 shadow-sm relative ${
+                  isBookmarked ? 'border-[#FFD93D] bg-[#FFFDF0]' : 'border-gray-100 hover:border-[#4ECDC4]'
+                }`}
+              >
+                {/* Question Header */}
+                <div className="flex items-start justify-between gap-3 mb-4">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className="bg-[#FF6B6B] text-white font-black px-3 py-1 rounded-full text-xs uppercase tracking-wider">
+                      Câu {q.id < 10 ? `0${q.id}` : q.id}
+                    </span>
+                    <span className="bg-[#4ECDC4]/15 text-[#1A7B74] text-xs font-bold px-3 py-1 rounded-full border border-[#4ECDC4]/30">
+                      {q.category}
+                    </span>
+                    {isAnswered && (
+                      <span
+                        className={`text-xs font-extrabold px-3 py-1 rounded-full flex items-center gap-1 ${
+                          isCorrect
+                            ? 'bg-[#F0FFFE] text-[#1A7B74] border border-[#4ECDC4]'
+                            : 'bg-rose-50 text-rose-700 border border-rose-200'
+                        }`}
+                      >
+                        {isCorrect ? (
+                          <>
+                            <CheckCircle2 className="w-3.5 h-3.5 text-[#1A7B74]" /> Chính xác!
+                          </>
+                        ) : (
+                          <>
+                            <XCircle className="w-3.5 h-3.5 text-rose-600" /> Thử lại nhé
+                          </>
+                        )}
+                      </span>
+                    )}
+                  </div>
 
-        <div class="question">
-            <div class="q-title">Câu 6. Khi tạo hồ sơ mạng xã hội an toàn, thông tin nào bạn NÊN chia sẻ công khai?</div>
-            <div class="options">
-                <div>A. Địa chỉ nhà riêng.</div>
-                <div>B. Tên trường học và lớp học.</div>
-                <div>C. Biệt danh hoặc tên gọi thân mật.</div>
-                <div>D. Số điện thoại cá nhân.</div>
-            </div>
-        </div>
+                  <div className="flex items-center gap-1.5 shrink-0">
+                    <button
+                      onClick={() => speakQuestion(q)}
+                      title="Đọc câu hỏi"
+                      className={`p-2 rounded-xl border-2 transition-colors ${
+                        speakingId === q.id
+                          ? 'bg-[#FF6B6B] text-white border-[#FF6B6B]'
+                          : 'bg-gray-50 text-gray-600 border-gray-200 hover:bg-gray-100'
+                      }`}
+                    >
+                      <Volume2 className="w-4 h-4" />
+                    </button>
+                    <button
+                      onClick={() => toggleBookmark(q.id)}
+                      title={isBookmarked ? 'Bỏ đánh dấu' : 'Đánh dấu cần xem lại'}
+                      className={`p-2 rounded-xl border-2 transition-colors ${
+                        isBookmarked
+                          ? 'bg-[#FFD93D] text-[#2D2D2D] border-[#FFD93D]'
+                          : 'bg-gray-50 text-gray-400 border-gray-200 hover:bg-gray-100'
+                      }`}
+                    >
+                      {isBookmarked ? (
+                        <BookmarkCheck className="w-4 h-4 text-[#2D2D2D]" />
+                      ) : (
+                        <Bookmark className="w-4 h-4" />
+                      )}
+                    </button>
+                  </div>
+                </div>
 
-        <div class="question">
-            <div class="q-title">Câu 7. Hình ảnh nào là an toàn nhất để đăng lên trang cá nhân trực tuyến?</div>
-            <div class="options-full">
-                <div>A. Ảnh mặc đồng phục trường rõ logo.</div>
-                <div>B. Ảnh chụp trước cửa nhà có số nhà rõ ràng.</div>
-                <div>C. Ảnh phong cảnh hoặc ảnh chụp vật dụng yêu thích không lộ thông tin cá nhân.</div>
-                <div>D. Ảnh chụp căn cước công dân hoặc thẻ học sinh.</div>
-            </div>
-        </div>
+                {/* Question Text */}
+                <h3 className="text-lg sm:text-xl font-bold text-[#2D2D2D] mb-5 leading-snug">
+                  {q.question}
+                </h3>
 
-        <div class="question">
-            <div class="q-title">Câu 8. Phương pháp nào giúp bạn tạo ra một mật khẩu mạnh nhưng vẫn dễ nhớ?</div>
-            <div class="options-full">
-                <div>A. Sử dụng tên của thú cưng hoặc người thân.</div>
-                <div>B. Sử dụng cụm từ viết tắt hoặc kỹ thuật ghi nhớ (mnemonics) để tạo chuỗi ký tự.</div>
-                <div>C. Viết mật khẩu vào một tờ giấy và dán ngay cạnh máy tính.</div>
-                <div>D. Chỉ sử dụng các chữ cái viết thường để tránh nhầm lẫn.</div>
-            </div>
-        </div>
+                {/* Options List */}
+                <div className="grid grid-cols-1 gap-3 mb-4">
+                  {q.options.map((opt) => {
+                    const isSelected = selected === opt.key;
+                    const isActualCorrect = opt.key === q.correctAnswer;
 
-        <div class="question">
-            <div class="q-title">Câu 9. Thuật ngữ "Phishing" trong an toàn trực tuyến nghĩa là gì?</div>
-            <div class="options-full">
-                <div>A. Hành vi lừa đảo để lấy thông tin cá nhân như mật khẩu, thẻ tín dụng.</div>
-                <div>B. Việc kết bạn với nhiều người lạ trên mạng.</div>
-                <div>C. Hành vi đăng tải những bình luận ác ý.</div>
-                <div>D. Việc máy tính bị chạy chậm do virus.</div>
-            </div>
-        </div>
+                    let optionStyle =
+                      'bg-white border-2 border-gray-100 text-[#2D2D2D] hover:border-[#4ECDC4] hover:bg-[#F0FFFE]';
+                    let badgeStyle = 'bg-gray-100 text-gray-700';
 
-        <div class="question">
-            <div class="q-title">Câu 10. "Catfishing" trên mạng xã hội được hiểu là:</div>
-            <div class="options-full">
-                <div>A. Chia sẻ quá nhiều ảnh về thú cưng.</div>
-                <div>B. Giả mạo danh tính của người khác để lừa đảo hoặc tiếp cận mục tiêu.</div>
-                <div>C. Tự ý thay đổi mật khẩu của người khác.</div>
-                <div>D. Gửi thư rác hàng loạt cho bạn bè.</div>
-            </div>
+                    if (isAnswered) {
+                      if (isActualCorrect) {
+                        optionStyle = 'bg-[#F0FFFE] border-2 border-[#4ECDC4] text-[#1A7B74] font-bold shadow-sm';
+                        badgeStyle = 'bg-[#4ECDC4] text-white';
+                      } else if (isSelected && !isCorrect) {
+                        optionStyle = 'bg-rose-50 border-2 border-rose-300 text-rose-900 line-through opacity-80';
+                        badgeStyle = 'bg-rose-500 text-white';
+                      } else {
+                        optionStyle = 'bg-gray-50 border-2 border-gray-100 text-gray-400 opacity-60';
+                        badgeStyle = 'bg-gray-100 text-gray-400';
+                      }
+                    }
+
+                    return (
+                      <button
+                        key={opt.key}
+                        onClick={() => handleSelectAnswer(q.id, opt.key)}
+                        className={`w-full text-left p-4 rounded-2xl transition-all duration-150 flex items-center gap-4 ${optionStyle}`}
+                      >
+                        <div
+                          className={`w-10 h-10 rounded-xl font-extrabold text-sm flex items-center justify-center shrink-0 ${badgeStyle}`}
+                        >
+                          {opt.key}
+                        </div>
+                        <span className="text-base font-medium leading-snug flex-grow">{opt.text}</span>
+                        {isAnswered && isActualCorrect && (
+                          <CheckCircle2 className="w-5 h-5 text-[#1A7B74] shrink-0 ml-auto" />
+                        )}
+                        {isAnswered && isSelected && !isCorrect && (
+                          <XCircle className="w-5 h-5 text-rose-500 shrink-0 ml-auto" />
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
+
+                {/* Explanation Card (Visible when answered) */}
+                {isAnswered && (
+                  <div className="mt-5 pt-4 border-t-2 border-gray-100 bg-[#FFF9E6] rounded-2xl p-4.5 border-[#FFD93D]/60">
+                    <div className="flex items-start gap-3">
+                      <Lightbulb className="w-5 h-5 text-[#FF6B6B] shrink-0 mt-0.5" />
+                      <div className="space-y-1.5 flex-grow">
+                        <div className="flex items-center justify-between flex-wrap gap-2">
+                          <span className="text-xs font-black uppercase tracking-wider text-[#2D2D2D]">
+                            Giải Thích Đáp Án ({q.correctAnswer}):
+                          </span>
+                          <button
+                            onClick={() =>
+                              onAskAi(
+                                `Câu ${q.id}: "${q.question}" - Đáp án đúng là ${q.correctAnswer}. Hãy giải thích dễ hiểu hơn cho học sinh lớp 5.`
+                              )
+                            }
+                            className="text-xs font-bold text-[#FF6B6B] hover:text-[#e05353] flex items-center gap-1 bg-white px-3 py-1 rounded-xl border border-[#FF6B6B]/30 shadow-2xs transition-colors"
+                          >
+                            <Bot className="w-3.5 h-3.5 text-[#FF6B6B]" />
+                            Hỏi AI giải thích thêm
+                          </button>
+                        </div>
+                        <p className="text-sm text-[#2D2D2D] leading-relaxed font-medium">
+                          {q.explanation}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+            );
+          })}
         </div>
+      ) : (
+        /* Single Question Navigation View */
+        <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm space-y-6">
+          {filteredQuestions.length > 0 && (
+            <div>
+              {(() => {
+                const q = filteredQuestions[currentSingleIndex % filteredQuestions.length];
+                const selected = userAnswers[q.id];
+                const isAnswered = selected !== undefined;
+                const isCorrect = selected === q.correctAnswer;
+
+                return (
+                  <div>
+                    <div className="flex items-center justify-between mb-4">
+                      <span className="text-xs font-bold bg-slate-900 text-white px-3 py-1 rounded-lg">
+                        Câu {currentSingleIndex + 1} / {filteredQuestions.length}
+                      </span>
+                      <span className="text-xs bg-emerald-100 text-emerald-800 px-2.5 py-1 rounded-full font-semibold">
+                        {q.category}
+                      </span>
+                    </div>
+
+                    <h3 className="text-lg sm:text-xl font-bold text-slate-900 mb-6">{q.question}</h3>
+
+                    <div className="space-y-3 mb-6">
+                      {q.options.map((opt) => {
+                        const isSelected = selected === opt.key;
+                        const isActualCorrect = opt.key === q.correctAnswer;
+
+                        let style = 'bg-slate-50 border-slate-200 text-slate-800 hover:bg-slate-100';
+                        if (isAnswered) {
+                          if (isActualCorrect) style = 'bg-emerald-50 border-emerald-500 text-emerald-950 font-bold';
+                          else if (isSelected && !isCorrect) style = 'bg-rose-50 border-rose-300 text-rose-900 line-through';
+                        }
+
+                        return (
+                          <button
+                            key={opt.key}
+                            onClick={() => handleSelectAnswer(q.id, opt.key)}
+                            className={`w-full text-left p-4 rounded-xl border text-base font-medium transition-all flex items-center gap-3 ${style}`}
+                          >
+                            <span className="w-8 h-8 rounded-lg bg-white border border-slate-300 text-slate-700 font-bold flex items-center justify-center shrink-0">
+                              {opt.key}
+                            </span>
+                            <span>{opt.text}</span>
+                          </button>
+                        );
+                      })}
+                    </div>
+
+                    {isAnswered && (
+                      <div className="p-4 bg-amber-50 rounded-xl border border-amber-200 mb-6 text-sm text-slate-800">
+                        <strong className="text-amber-900 block mb-1">Giải thích ({q.correctAnswer}):</strong>
+                        {q.explanation}
+                      </div>
+                    )}
+
+                    <div className="flex items-center justify-between border-t pt-4">
+                      <button
+                        disabled={currentSingleIndex === 0}
+                        onClick={() => setCurrentSingleIndex((prev) => Math.max(0, prev - 1))}
+                        className="px-4 py-2 bg-slate-100 hover:bg-slate-200 disabled:opacity-40 rounded-xl text-sm font-semibold flex items-center gap-1"
+                      >
+                        <ChevronLeft className="w-4 h-4" /> Câu trước
+                      </button>
+                      <button
+                        disabled={currentSingleIndex === filteredQuestions.length - 1}
+                        onClick={() => setCurrentSingleIndex((prev) => Math.min(filteredQuestions.length - 1, prev + 1))}
+                        className="px-4 py-2 bg-emerald-600 text-white hover:bg-emerald-500 disabled:opacity-40 rounded-xl text-sm font-semibold flex items-center gap-1"
+                      >
+                        Câu tiếp <ChevronRight className="w-4 h-4" />
+                      </button>
+                    </div>
+                  </div>
+                );
+              })()}
+            </div>
+          )}
+        </div>
+      )}
     </div>
-
-    <!-- TRANG 2 -->
-    <div class="page">
-        <div class="question">
-            <div class="q-title">Câu 11. Bạn nên làm gì nếu nhận được một tin nhắn trực tuyến khiến bạn cảm thấy lo lắng?</div>
-            <div class="options-full">
-                <div>A. Trả lời lại bằng những lời lẽ gay gắt.</div>
-                <div>B. Chặn người gửi và báo ngay cho người lớn tin cậy.</div>
-                <div>C. Xóa tin nhắn ngay lập tức để không ai thấy.</div>
-                <div>D. Chia sẻ tin nhắn đó cho tất cả bạn bè cùng xem.</div>
-            </div>
-        </div>
-
-        <div class="question">
-            <div class="q-title">Câu 12. Tại Việt Nam, tổ chức nào hỗ trợ hoạt động phát triển cộng đồng và thanh thiếu niên?</div>
-            <div class="options">
-                <div>A. Các rạp chiếu phim.</div>
-                <div>B. Nhà văn hóa thiếu nhi/thanh niên.</div>
-                <div>C. Các cửa hàng tiện lợi.</div>
-                <div>D. Các trung tâm trò chơi điện tử.</div>
-            </div>
-        </div>
-
-        <div class="question">
-            <div class="q-title">Câu 13. Khi gặp dòng chảy xa bờ (rip currents), hành động an toàn nhất là gì?</div>
-            <div class="options-full">
-                <div>A. Cố gắng bơi ngược dòng để vào bờ nhanh nhất.</div>
-                <div>B. Giữ bình tĩnh, bơi song song với bờ để thoát khỏi dòng chảy.</div>
-                <div>C. Thả lỏng hoàn toàn để dòng chảy đưa ra xa hơn.</div>
-                <div>D. Kêu cứu và vùng vẫy thật mạnh.</div>
-            </div>
-        </div>
-
-        <div class="question">
-            <div class="q-title">Câu 14. Cờ hiệu màu gì trên bãi biển cảnh báo khu vực nguy hiểm cấm bơi?</div>
-            <div class="options">
-                <div>A. Cờ màu xanh lá cây.</div>
-                <div>B. Cờ màu vàng.</div>
-                <div>C. Cờ màu đỏ.</div>
-                <div>D. Cờ màu trắng.</div>
-            </div>
-        </div>
-
-        <div class="question">
-            <div class="q-title">Câu 15. Trong quy tắc KLUE (về nguyên nhân tai nạn giao thông), chữ "K" đại diện cho điều gì?</div>
-            <div class="options">
-                <div>A. Kind (Tử tế).</div>
-                <div>B. Knowledge (Kiến thức/Hiểu biết).</div>
-                <div>C. Key (Chìa khóa).</div>
-                <div>D. Kinetic (Động năng).</div>
-            </div>
-        </div>
-
-        <div class="question">
-            <div class="q-title">Câu 16. Hành vi nào thuộc nhóm "U" (Unsafe behaviour - Hành vi không an toàn) khi đi đường?</div>
-            <div class="options-full">
-                <div>A. Đường trơn trượt do mưa.</div>
-                <div>B. Xe đạp bị hỏng phanh đột ngột.</div>
-                <div>C. Vừa đi xe đạp vừa đeo tai nghe nghe nhạc.</div>
-                <div>D. Chưa đủ kỹ năng điều khiển xe.</div>
-            </div>
-        </div>
-
-        <div class="question">
-            <div class="q-title">Câu 17. Tại sao trẻ em dưới 12 tuổi nên đi xe đạp trên vỉa hè hoặc công viên?</div>
-            <div class="options-full">
-                <div>A. Để tránh làm hỏng đường nhựa.</div>
-                <div>B. Vì kỹ năng xử lý tình huống trên đường giao thông chưa hoàn thiện.</div>
-                <div>C. Vì vỉa hè rộng rãi hơn lòng đường.</div>
-                <div>D. Để đi nhanh hơn không bị cản trở.</div>
-            </div>
-        </div>
-
-        <div class="question">
-            <div class="q-title">Câu 18. Loài côn trùng nào thường gây bỏng da nghiêm trọng tại địa phương (như TP.HCM)?</div>
-            <div class="options">
-                <div>A. Bướm đêm.</div>
-                <div>B. Kiến ba khoang (rove beetles).</div>
-                <div>C. Chuồn chuồn.</div>
-                <div>D. Ve sầu.</div>
-            </div>
-        </div>
-
-        <div class="question">
-            <div class="q-title">Câu 19. Mục đích chính của việc đeo mũ bảo hiểm khi đi xe đạp/xe máy là gì?</div>
-            <div class="options-full">
-                <div>A. Để không bị phạt tiền.</div>
-                <div>B. Giữ tóc không bị rối khi đi nhanh.</div>
-                <div>C. Giảm thiểu chấn thương sọ não khi xảy ra va chạm.</div>
-                <div>D. Để che nắng và mưa hiệu quả hơn.</div>
-            </div>
-        </div>
-
-        <div class="question">
-            <div class="q-title">Câu 20. Khi gặp tình huống khẩn cấp, bước đầu tiên trong kế hoạch hành động là gì?</div>
-            <div class="options-full">
-                <div>A. Tự mình giải quyết mọi việc.</div>
-                <div>B. Giữ bình tĩnh và gọi cứu hộ hoặc người lớn ở gần đó.</div>
-                <div>C. Bỏ chạy khỏi hiện trường nhanh nhất có thể.</div>
-                <div>D. Quay phim đăng lên mạng xã hội.</div>
-            </div>
-        </div>
-
-        <div class="section-title" style="margin-top: 15px;">PHẦN 2: THỬ THÁCH CHUỖI TỪ KHÓA (KEYWORD CHAIN)</div>
-        <div class="instruction">Điền tiếp các từ khóa quan trọng của Unit 3 vào chuỗi dưới đây. <br>Quy tắc: Chữ cái cuối của từ trước là chữ cái bắt đầu của từ sau.</div>
-
-        <div class="chain-box">
-            <strong>MẬT KHẨU</strong> (U) ➔ <strong>U</strong>.................................................. (N) ➔ <strong>N</strong>.................................................. (O) ➔ <strong>O</strong>.................................................. (E) ➔ <strong>E</strong>..................................................
-        </div>
-
-        <div class="footer-note">--- HẾT ---</div>
-    </div>
-
-</body>
-</html>
+  );
+};

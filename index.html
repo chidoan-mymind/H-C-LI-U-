@@ -1,0 +1,490 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mô Phỏng Phân Số Trực Quan - Chiếc Bánh Pizza STEM</title>
+  <style>
+    :root {
+      --primary: #e67e22;
+      --primary-hover: #d35400;
+      --secondary: #2c3e50;
+      --accent: #27ae60;
+      --bg: #f8f9fa;
+      --card-bg: #ffffff;
+      --text: #2c3e50;
+      --border: #e0e0e0;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    }
+
+    body {
+      background-color: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+      padding: 20px;
+    }
+
+    .container {
+      max-width: 1100px;
+      margin: 0 auto;
+      background: var(--card-bg);
+      border-radius: 16px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+      overflow: hidden;
+    }
+
+    header {
+      background: linear-gradient(135deg, #f39c12, #e67e22);
+      color: white;
+      padding: 20px 30px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 15px;
+    }
+
+    header h1 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .btn-download {
+      background: white;
+      color: var(--primary-hover);
+      border: none;
+      padding: 10px 18px;
+      border-radius: 30px;
+      font-weight: 700;
+      cursor: pointer;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+      transition: all 0.2s ease;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .btn-download:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 14px rgba(0, 0, 0, 0.2);
+      background: #fff8f0;
+    }
+
+    .main-content {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 30px;
+      padding: 30px;
+    }
+
+    @media (max-width: 850px) {
+      .main-content {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .panel {
+      background: #fafafa;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    .panel-title {
+      font-size: 1.2rem;
+      font-weight: 600;
+      color: var(--secondary);
+      border-bottom: 2px solid var(--primary);
+      padding-bottom: 8px;
+    }
+
+    .slider-group {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .slider-label {
+      display: flex;
+      justify-content: space-between;
+      font-weight: 600;
+    }
+
+    .slider-label span.value {
+      color: var(--primary);
+      font-size: 1.2rem;
+    }
+
+    input[type="range"] {
+      width: 100%;
+      height: 8px;
+      border-radius: 5px;
+      background: #ddd;
+      outline: none;
+      accent-color: var(--primary);
+      cursor: pointer;
+    }
+
+    .fraction-display {
+      background: white;
+      border: 2px dashed var(--primary);
+      border-radius: 12px;
+      padding: 15px;
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .fraction-math {
+      display: inline-flex;
+      flex-direction: column;
+      align-items: center;
+      font-size: 2rem;
+      font-weight: bold;
+      color: var(--secondary);
+      margin: 5px 0;
+    }
+
+    .fraction-math .numerator {
+      border-bottom: 3px solid var(--secondary);
+      padding: 0 10px;
+    }
+
+    .fraction-math .denominator {
+      padding: 0 10px;
+    }
+
+    .stats-info {
+      font-size: 0.95rem;
+      color: #666;
+    }
+
+    .quiz-card {
+      background: #eef9f1;
+      border: 1px solid #c8e6c9;
+      border-radius: 10px;
+      padding: 15px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .quiz-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .score-badge {
+      background: var(--accent);
+      color: white;
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-weight: bold;
+      font-size: 0.9rem;
+    }
+
+    .btn-quiz {
+      background: var(--accent);
+      color: white;
+      border: none;
+      padding: 10px;
+      border-radius: 8px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    .btn-quiz:hover {
+      background: #219150;
+    }
+
+    .canvas-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 350px;
+    }
+
+    canvas {
+      max-width: 100%;
+      height: auto;
+      filter: drop-shadow(0 6px 12px rgba(0, 0, 0, 0.1));
+    }
+
+    .feedback {
+      min-height: 24px;
+      font-weight: bold;
+      text-align: center;
+    }
+
+    .feedback.correct {
+      color: var(--accent);
+    }
+
+    .feedback.wrong {
+      color: #e74c3c;
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <header>
+    <h1>🍕 Mô Phỏng Phân Số Trực Quan</h1>
+    <button class="btn-download" onclick="downloadOfflineFile()">
+      📥 Tải File Mô Phỏng (.html)
+    </button>
+  </header>
+
+  <div class="main-content">
+    <!-- Cột trái: Điều khiển & Đố vui -->
+    <div class="panel">
+      <div class="panel-title">⚙️ Điều Chỉnh Phân Số</div>
+
+      <div class="slider-group">
+        <div class="slider-label">
+          <span>Tử số (Số miếng bánh chọn):</span>
+          <span class="value" id="numVal">1</span>
+        </div>
+        <input type="range" id="numSlider" min="1" max="10" value="1">
+      </div>
+
+      <div class="slider-group">
+        <div class="slider-label">
+          <span>Mẫu số (Tổng số miếng bánh):</span>
+          <span class="value" id="denVal">4</span>
+        </div>
+        <input type="range" id="denSlider" min="1" max="10" value="4">
+      </div>
+
+      <div class="fraction-display">
+        <div class="fraction-math">
+          <span class="numerator" id="dispNum">1</span>
+          <span class="denominator" id="dispDen">4</span>
+        </div>
+        <div class="stats-info" id="statsInfo">
+          Tương đương: 25% | Thập phân: 0.25
+        </div>
+      </div>
+
+      <!-- Khung Thử Thách -->
+      <div class="quiz-card">
+        <div class="quiz-header">
+          <strong>🎯 Thử Thách Giải Đố</strong>
+          <span class="score-badge" id="scoreDisplay">Điểm: 0</span>
+        </div>
+        <div id="quizPrompt">Bấm "Thử thách" để nhận đề bài ngẫu nhiên!</div>
+        <button class="btn-quiz" id="quizBtn" onclick="startOrCheckQuiz()">Thử thách mới</button>
+        <div class="feedback" id="feedback"></div>
+      </div>
+    </div>
+
+    <!-- Cột phải: Đồ họa chiếc bánh Pizza -->
+    <div class="panel canvas-container">
+      <div class="panel-title" style="width: 100%;">🎨 Bánh Pizza Trực Quan</div>
+      <canvas id="pizzaCanvas" width="360" height="360"></canvas>
+    </div>
+  </div>
+</div>
+
+<script>
+  // Khởi tạo trạng thái ứng dụng
+  const numSlider = document.getElementById('numSlider');
+  const denSlider = document.getElementById('denSlider');
+  const numVal = document.getElementById('numVal');
+  const denVal = document.getElementById('denVal');
+  const dispNum = document.getElementById('dispNum');
+  const dispDen = document.getElementById('dispDen');
+  const statsInfo = document.getElementById('statsInfo');
+  const canvas = document.getElementById('pizzaCanvas');
+  const ctx = canvas.getContext('2d');
+
+  // Đố vui & LocalStorage
+  const quizPrompt = document.getElementById('quizPrompt');
+  const quizBtn = document.getElementById('quizBtn');
+  const feedback = document.getElementById('feedback');
+  const scoreDisplay = document.getElementById('scoreDisplay');
+
+  let currentTargetNum = null;
+  let currentTargetDen = null;
+  let isQuizActive = false;
+  let score = parseInt(localStorage.getItem('pizza_fraction_score') || '0');
+
+  scoreDisplay.innerText = `Điểm: ${score}`;
+
+  // Đảm bảo mẫu số >= tử số
+  function updateSliders() {
+    let num = parseInt(numSlider.value);
+    let den = parseInt(denSlider.value);
+
+    if (den < num) {
+      den = num;
+      denSlider.value = den;
+    }
+
+    numVal.innerText = num;
+    denVal.innerText = den;
+    dispNum.innerText = num;
+    dispDen.innerText = den;
+
+    const percent = ((num / den) * 100).toFixed(1);
+    const decimal = (num / den).toFixed(2);
+    statsInfo.innerText = `Tương đương: ${percent}% | Thập phân: ${decimal}`;
+
+    drawPizza(num, den);
+    if (isQuizActive) {
+      checkQuizProgress();
+    }
+  }
+
+  // Vẽ Bánh Pizza bằng Canvas 2D
+  function drawPizza(num, den) {
+    const centerX = canvas.width / 2;
+    const centerY = canvas.height / 2;
+    const radius = 140;
+
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    const sliceAngle = (2 * Math.PI) / den;
+
+    for (let i = 0; i < den; i++) {
+      const startAngle = i * sliceAngle - Math.PI / 2;
+      const endAngle = startAngle + sliceAngle;
+      const isSelected = i < num;
+
+      // 1. Đế bánh & Phô mai
+      ctx.beginPath();
+      ctx.moveTo(centerX, centerY);
+      ctx.arc(centerX, centerY, radius, startAngle, endAngle);
+      ctx.closePath();
+
+      if (isSelected) {
+        // Màu da cam phô mai đậm chất lượng
+        ctx.fillStyle = '#ff9f43';
+      } else {
+        // Màu xám nhạt cho phần chưa chọn
+        ctx.fillStyle = '#f0d3b1';
+      }
+      ctx.fill();
+
+      // Viền bánh (Crust)
+      ctx.beginPath();
+      ctx.arc(centerX, centerY, radius, startAngle, endAngle);
+      ctx.lineWidth = 14;
+      ctx.strokeStyle = isSelected ? '#d35400' : '#c89661';
+      ctx.stroke();
+
+      // Viền phân chia giữa các miếng bánh
+      ctx.beginPath();
+      ctx.moveTo(centerX, centerY);
+      ctx.lineTo(
+        centerX + radius * Math.cos(startAngle),
+        centerY + radius * Math.sin(startAngle)
+      );
+      ctx.lineWidth = 2;
+      ctx.strokeStyle = '#ffffff';
+      ctx.stroke();
+
+      // Trang trí Pepperoni cho miếng bánh được chọn
+      if (isSelected) {
+        const midAngle = startAngle + sliceAngle / 2;
+        const popRadius = radius * 0.55;
+        const px = centerX + popRadius * Math.cos(midAngle);
+        const py = centerY + popRadius * Math.sin(midAngle);
+
+        ctx.beginPath();
+        ctx.arc(px, py, radius * 0.12, 0, 2 * Math.PI);
+        ctx.fillStyle = '#ee5253';
+        ctx.fill();
+        ctx.lineWidth = 1;
+        ctx.strokeStyle = '#c82333';
+        ctx.stroke();
+      }
+    }
+
+    // Tâm bánh Pizza
+    ctx.beginPath();
+    ctx.arc(centerX, centerY, 6, 0, 2 * Math.PI);
+    ctx.fillStyle = '#ffffff';
+    ctx.fill();
+  }
+
+  // Sự kiện Slider
+  numSlider.addEventListener('input', updateSliders);
+  denSlider.addEventListener('input', updateSliders);
+
+  // Tính năng Đố vui
+  function startOrCheckQuiz() {
+    if (!isQuizActive) {
+      // Tạo câu hỏi mới
+      currentTargetDen = Math.floor(Math.random() * 9) + 2; // 2 -> 10
+      currentTargetNum = Math.floor(Math.random() * currentTargetDen) + 1; // 1 -> den
+
+      quizPrompt.innerHTML = `Hãy điều chỉnh thanh trượt để tạo phân số: <strong style="font-size:1.3rem; color:#e67e22;">${currentTargetNum}/${currentTargetDen}</strong>`;
+      feedback.innerText = '';
+      feedback.className = 'feedback';
+      quizBtn.innerText = 'Kiểm tra đáp án';
+      isQuizActive = true;
+    } else {
+      // Kiểm tra đáp án
+      const num = parseInt(numSlider.value);
+      const den = parseInt(denSlider.value);
+
+      if (num * currentTargetDen === den * currentTargetNum) {
+        feedback.innerText = '🎉 Chúc mừng! Bạn đã trả lời đúng!';
+        feedback.className = 'feedback correct';
+        score += 10;
+        localStorage.setItem('pizza_fraction_score', score.toString());
+        scoreDisplay.innerText = `Điểm: ${score}`;
+        isQuizActive = false;
+        quizBtn.innerText = 'Thử thách mới';
+      } else {
+        feedback.innerText = '❌ Chưa chính xác, hãy thử lại!';
+        feedback.className = 'feedback wrong';
+      }
+    }
+  }
+
+  function checkQuizProgress() {
+    if (isQuizActive) {
+      feedback.innerText = '';
+    }
+  }
+
+  // TÍNH NĂNG TẢI FILE AUTOMATIC (Blob & URL.createObjectURL)
+  function downloadOfflineFile() {
+    const htmlContent = '<!DOCTYPE html>\n' + document.documentElement.outerHTML;
+    const blob = new Blob([htmlContent], { type: 'text/html;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'MoPhongPhanSo_Offline.html';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }
+
+  // Khởi tạo giao diện ban đầu
+  updateSliders();
+</script>
+
+</body>
+</html>
